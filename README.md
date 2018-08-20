@@ -91,6 +91,7 @@ model.patch({ ... });
 
 If you need to use custom deserializers in your schema, you can use an object with a `deserialize` method:
 
+```js
 const Range = {
   deserialize(store, rangeString) {
     const [ min, max ] = rangeString.split('-');
@@ -110,4 +111,5 @@ class MyModel extends Model {
 const model = new MyModel({
   id: 1,
   myRange: '10-20' // will be automatically converted to [10, 20]
-})
+});
+```

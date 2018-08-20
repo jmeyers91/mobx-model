@@ -1,11 +1,12 @@
 {
   "name": "@simplej/mobx-model",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/Model.js",
   "scripts": {
     "test": "npx jest",
-    "build": "npx babel src -d dist"
+    "build": "npx babel src -d dist",
+    "publish": "npm publish --access public"
   },
   "keywords": [],
   "author": "James Meyers",
