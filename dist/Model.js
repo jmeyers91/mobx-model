@@ -110,7 +110,12 @@ var Model = function () {
           var deserialize = _ref6[1];
 
           if (key in fields) {
-            patch[key] = deserialize(this.store, fields[key]);
+            var value = fields[key];
+            if (value == null) {
+              patch[key] = null;
+            } else {
+              patch[key] = deserialize(this.store, value);
+            }
           }
         }
       } catch (err) {
@@ -156,6 +161,10 @@ function hasOne(ModelClass) {
     deserializeFn = parsers.number;
   } else if (ModelClass === Date) {
     deserializeFn = parsers.date;
+  } else if (ModelClass === Object) {
+    deserializeFn = parsers.object;
+  } else if (ModelClass === Array) {
+    deserializeFn = parsers.array;
   } else if (ModelClass.deserialize) {
     deserializeFn = parsers.customDeserializer(ModelClass.deserialize);
   } else if (isModelClass(ModelClass)) {
@@ -174,16 +183,22 @@ function isModelClass(ModelClass) {
 
 var parsers = {
   string: function string(_, value) {
-    return value != null ? value : null;
+    return value;
   },
   boolean: function boolean(_, value) {
     return !!value;
   },
   number: function number(_, value) {
-    return value != null ? +value : null;
+    return +value;
   },
   date: function date(_, value) {
-    return value != null ? new Date(value) : null;
+    return new Date(value);
+  },
+  object: function object(_, value) {
+    return value;
+  },
+  array: function array(_, value) {
+    return value;
   },
   customDeserializer: function customDeserializer(deserialize) {
     return function (store, value) {
@@ -192,7 +207,6 @@ var parsers = {
   },
   customModel: function customModel(ModelClass) {
     return function (store, value) {
-      if (value == null) return null;
       if (value instanceof ModelClass) return value;
       return new ModelClass(store, value);
     };

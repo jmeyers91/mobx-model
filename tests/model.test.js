@@ -110,4 +110,44 @@ describe('Model', () => {
     model.key = 'changed';
     expect(values).toEqual(['unchanged', 'changed']);
   });
+
+  test('Model nested object properties should be observable', () => {
+    class TestClass extends Model {
+      static get schema() {
+        return {
+          key: Object
+        };
+      }
+    }
+
+    const model = new TestClass({}, {key: {subkey: 'unchanged'}});
+    const values = [];
+
+    autorun(() => {
+      values.push(model.key.subkey);
+    });
+
+    model.key.subkey = 'changed';
+    expect(values).toEqual(['unchanged', 'changed']);
+  });
+
+  test('Model nested array properties should be observable', () => {
+    class TestClass extends Model {
+      static get schema() {
+        return {
+          key: Array
+        };
+      }
+    }
+
+    const model = new TestClass({}, {key: ['unchanged']});
+    const values = [];
+
+    autorun(() => {
+      values.push(model.key[0]);
+    });
+
+    model.key[0] = 'changed';
+    expect(values).toEqual(['unchanged', 'changed']);
+  });
 });

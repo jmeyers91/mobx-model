@@ -56,7 +56,12 @@ export default class Model {
     const { deserializers } = this.constructor;
     for(let [ key, deserialize ] of deserializers) {
       if(key in fields) {
-        patch[key] = deserialize(this.store, fields[key]);
+        const value = fields[key];
+        if(value == null) {
+          patch[key] = null;
+        } else {
+          patch[key] = deserialize(this.store, value);
+        }
       }
     }
     Object.assign(this, patch);
@@ -83,6 +88,10 @@ export function hasOne(ModelClass) {
     deserializeFn = parsers.number;
   } else if(ModelClass === Date) {
     deserializeFn = parsers.date;
+  } else if(ModelClass === Object) {
+    deserializeFn = parsers.object;
+  } else if(ModelClass === Array) {
+    deserializeFn = parsers.array;
   } else if(ModelClass.deserialize) {
     deserializeFn = parsers.customDeserializer(ModelClass.deserialize);
   } else if(isModelClass(ModelClass)) {
@@ -100,13 +109,14 @@ function isModelClass(ModelClass) {
 }
 
 const parsers = {
-  string: (_, value) => value != null ? value : null,
+  string: (_, value) => value,
   boolean: (_, value) => !!value,
-  number: (_, value) => value != null ? +value : null,
-  date: (_, value) => value != null ? new Date(value) : null,
+  number: (_, value) => +value,
+  date: (_, value) => new Date(value),
+  object: (_, value) => value,
+  array: (_, value) => value,
   customDeserializer: deserialize => (store, value) => deserialize(store, value),
   customModel: ModelClass => (store, value) => {
-    if(value == null) return null;
     if(value instanceof ModelClass) return value;
     return new ModelClass(store, value);
   },
