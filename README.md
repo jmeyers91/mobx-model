@@ -1,6 +1,6 @@
 # @simplej/mobx-model
 
-A simple MobX Model class for easily wrapping nested JSON models in MobX observable classes.
+A MobX Model class for easily wrapping nested JSON models in MobX observable classes.
 
 ## Install
 
@@ -97,7 +97,7 @@ const Range = {
     const [ min, max ] = rangeString.split('-');
     return [+min, +max];
   }
-}
+};
 
 class MyModel extends Model {
   static get schema() {
