@@ -18,9 +18,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Model = function () {
   _createClass(Model, null, [{
     key: 'create',
-    value: function create(store, object) {
+    value: function create(fields, store) {
       var Constructor = this;
-      return new Constructor(store, object);
+      return new Constructor(fields, store);
     }
 
     // Takes an array of serialized models and returns an array of wrapped models
@@ -28,11 +28,11 @@ var Model = function () {
 
   }, {
     key: 'fromArray',
-    value: function fromArray(store, array) {
+    value: function fromArray(array, store) {
       var _this = this;
 
-      return Array.isArray(array) ? array.map(function (object) {
-        return _this.create(store, object);
+      return Array.isArray(array) ? array.map(function (fields) {
+        return _this.create(fields, store);
       }) : null;
     }
 
@@ -77,23 +77,23 @@ var Model = function () {
     }
   }]);
 
-  function Model(store, fields) {
+  function Model(fields, store) {
     _classCallCheck(this, Model);
 
-    if (!store) throw new Error('You must pass a store reference when creating a ' + this.constructor.name);
-    fields = fields || {};
     (0, _mobx.extendObservable)(this, this.constructor.initialObservables);
     this.store = store;
     this.patch(fields);
   }
 
-  // Patches the model with the passed fields.
+  // Deserializes the passed fields using the model's schema and Patches the model with them.
   // Only fields that exist in the model's schema will be applied.
 
 
   _createClass(Model, [{
     key: 'patch',
     value: function patch(fields) {
+      if (!fields) return;
+
       var patch = {};
       var deserializers = this.constructor.deserializers;
       var _iteratorNormalCompletion = true;
@@ -114,7 +114,7 @@ var Model = function () {
             if (value == null) {
               patch[key] = null;
             } else {
-              patch[key] = deserialize(this.store, value);
+              patch[key] = deserialize(value, this.store);
             }
           }
         }
@@ -143,9 +143,9 @@ var Model = function () {
 exports.default = Model;
 function hasMany(ModelClass) {
   var deserialize = hasOne(ModelClass);
-  return function (store, values) {
+  return function (values, store) {
     return Array.isArray(values) ? values.map(function (value) {
-      return deserialize(store, value);
+      return deserialize(value, store);
     }) : null;
   };
 }
@@ -182,33 +182,33 @@ function isModelClass(ModelClass) {
 }
 
 var parsers = {
-  string: function string(_, value) {
+  string: function string(value) {
     return value;
   },
-  boolean: function boolean(_, value) {
+  boolean: function boolean(value) {
     return !!value;
   },
-  number: function number(_, value) {
+  number: function number(value) {
     return +value;
   },
-  date: function date(_, value) {
+  date: function date(value) {
     return new Date(value);
   },
-  object: function object(_, value) {
+  object: function object(value) {
     return value;
   },
-  array: function array(_, value) {
+  array: function array(value) {
     return value;
   },
   customDeserializer: function customDeserializer(deserialize) {
-    return function (store, value) {
-      return deserialize(store, value);
+    return function (value, store) {
+      return deserialize(value, store);
     };
   },
   customModel: function customModel(ModelClass) {
-    return function (store, value) {
+    return function (value, store) {
       if (value instanceof ModelClass) return value;
-      return new ModelClass(store, value);
+      return new ModelClass(value, store);
     };
   }
 };

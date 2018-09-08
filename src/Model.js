@@ -1,16 +1,16 @@
 import { extendObservable } from 'mobx';
 
 export default class Model {
-  static create(store, object) {
+  static create(fields, store) {
     const Constructor = this;
-    return new Constructor(store, object);
+    return new Constructor(fields, store);
   }
 
   // Takes an array of serialized models and returns an array of wrapped models
   // Returns `null` if the input isn't an array.
-  static fromArray(store, array) {
+  static fromArray(array, store) {
     return Array.isArray(array)
-      ? array.map(object => this.create(store, object))
+      ? array.map(fields => this.create(fields, store))
       : null;
   }
 
@@ -41,17 +41,17 @@ export default class Model {
     return this._initialObservables;
   }
 
-  constructor(store, fields) {
-    if(!store) throw new Error(`You must pass a store reference when creating a ${this.constructor.name}`);
-    fields = fields || {};
+  constructor(fields, store) {
     extendObservable(this, this.constructor.initialObservables);
     this.store = store;
     this.patch(fields);
   }
 
-  // Patches the model with the passed fields.
+  // Deserializes the passed fields using the model's schema and Patches the model with them.
   // Only fields that exist in the model's schema will be applied.
   patch(fields) {
+    if(!fields) return;
+
     const patch = {};
     const { deserializers } = this.constructor;
     for(let [ key, deserialize ] of deserializers) {
@@ -60,7 +60,7 @@ export default class Model {
         if(value == null) {
           patch[key] = null;
         } else {
-          patch[key] = deserialize(this.store, value);
+          patch[key] = deserialize(value, this.store);
         }
       }
     }
@@ -70,9 +70,9 @@ export default class Model {
 
 export function hasMany(ModelClass) {
   const deserialize = hasOne(ModelClass);
-  return (store, values) => {
+  return (values, store) => {
     return Array.isArray(values)
-      ? values.map(value => deserialize(store, value))
+      ? values.map(value => deserialize(value, store))
       : null;
   };
 }
@@ -109,15 +109,15 @@ function isModelClass(ModelClass) {
 }
 
 const parsers = {
-  string: (_, value) => value,
-  boolean: (_, value) => !!value,
-  number: (_, value) => +value,
-  date: (_, value) => new Date(value),
-  object: (_, value) => value,
-  array: (_, value) => value,
-  customDeserializer: deserialize => (store, value) => deserialize(store, value),
-  customModel: ModelClass => (store, value) => {
+  string: value => value,
+  boolean: value => !!value,
+  number: value => +value,
+  date: value => new Date(value),
+  object: value => value,
+  array: value => value,
+  customDeserializer: deserialize => (value, store) => deserialize(value, store),
+  customModel: ModelClass => (value, store) => {
     if(value instanceof ModelClass) return value;
-    return new ModelClass(store, value);
+    return new ModelClass(value, store);
   },
 };

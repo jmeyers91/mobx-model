@@ -4,7 +4,7 @@ import { autorun } from 'mobx';
 describe('Model', () => {
   test('Should be able to create a custom model', () => {
     class TestModel extends Model {}
-    const model = new TestModel({}, {});
+    const model = new TestModel({});
   });
 
   test('Should parse primitives declared in the model schema', () => {
@@ -18,7 +18,7 @@ describe('Model', () => {
         }
       }
     }
-    const model = new TestModel({}, {
+    const model = new TestModel({
       number: '23.5',
       boolean: 100,
       string: 'string',
@@ -48,7 +48,7 @@ describe('Model', () => {
       }
     }
 
-    const model = new TestClass1({}, {
+    const model = new TestClass1({
       testClass2: {
         id: '100'
       }
@@ -75,7 +75,7 @@ describe('Model', () => {
       }
     }
 
-    const model = new Parent({}, {
+    const model = new Parent({
       children: [
         {id: '100'},
         {id: '101'},
@@ -100,7 +100,7 @@ describe('Model', () => {
       }
     }
 
-    const model = new TestClass({}, {key: 'unchanged'});
+    const model = new TestClass({key: 'unchanged'});
     const values = [];
 
     autorun(() => {
@@ -120,7 +120,7 @@ describe('Model', () => {
       }
     }
 
-    const model = new TestClass({}, {key: {subkey: 'unchanged'}});
+    const model = new TestClass({key: {subkey: 'unchanged'}});
     const values = [];
 
     autorun(() => {
@@ -140,7 +140,7 @@ describe('Model', () => {
       }
     }
 
-    const model = new TestClass({}, {key: ['unchanged']});
+    const model = new TestClass({key: ['unchanged']});
     const values = [];
 
     autorun(() => {

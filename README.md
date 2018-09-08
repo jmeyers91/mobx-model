@@ -8,7 +8,7 @@ A MobX Model class for easily wrapping nested JSON models in MobX observable cla
 npm install @simplej/mobx-model
 ```
 
-## Usage
+## Example
 
 ```js
 import Model from '@simplej/mobx-model';
@@ -32,9 +32,14 @@ class Post extends Model {
       title: String,
       content: String,
       createdAt: Date,
+      author: User,
     };
   }
 }
+
+// optional: in case models need access to a parent or root store,
+// you can pass it as the second argument to model constructors and `fromArray`
+const store = {};
 
 const user = new User({
   id: 1,
@@ -53,7 +58,7 @@ const user = new User({
       createdAt: '2018-08-20T18:43:37.504Z'
     },
   ]
-});
+}, store);
 
 user.patch({
   posts: [ // will be converted to an array of Post instances
@@ -69,19 +74,43 @@ user.patch({
 
 ## API
 
-Create a new Model instance:
+### Extend a model:
 
 ```
-const model = new Model(store, { ... });
+import Model from '@simplej/mobx-model`;
+import Post from './Post';
+
+class User extends Model {
+  static get schema() {
+    return {
+      id: Number,
+      age: Number,
+      name: String,
+      posts: [ Post ],
+    };
+  }
+}
 ```
 
-Create an array of model instances:
+### Create a new Model instance:
+
+`new Model(fields:Object?, store:Object?)`
 
 ```
-const models = Model.fromArray(store, [ ... ]);
+const model = new Model({ ... }, store);
 ```
 
-Patch a model:
+### Create an array of model instances:
+
+`Model.fromArray(models:Array, store:Object?)`
+
+```
+const models = Model.fromArray([ ... ], store);
+```
+
+### Patch a model:
+
+`Model#patch(fields:Object)`
 
 ```
 model.patch({ ... });
@@ -92,8 +121,9 @@ model.patch({ ... });
 If you need to use custom deserializers in your schema, you can use an object with a `deserialize` method:
 
 ```js
+
 const Range = {
-  deserialize(store, rangeString) {
+  deserialize(rangeString) {
     const [ min, max ] = rangeString.split('-');
     return [+min, +max];
   }
@@ -112,4 +142,9 @@ const model = new MyModel({
   id: 1,
   myRange: '10-20' // will be automatically converted to [10, 20]
 });
+
+model.patch({
+  myRange: '200-300' // will be automatically converted to [200, 300]
+});
 ```
+
