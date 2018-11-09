@@ -1,5 +1,8 @@
 import { extendObservable } from 'mobx';
 
+const modelDeserializers = new Map();
+const modelObservables = new Map();
+
 export default class Model {
   static create(fields, store) {
     const Constructor = this;
@@ -18,27 +21,29 @@ export default class Model {
   // This value is cached.
   static get deserializers() {
     if(!this.schema) return [];
-    if(!this._deserializers) {
-      this._deserializers = Object.entries(this.schema).map(([ key, deserialize ]) => {
+    if(!modelDeserializers.has(this)) {
+      const deserializers = Object.entries(this.schema).map(([ key, deserialize ]) => {
         if(deserialize.isDeserializeFn) return [key, deserialize];
         if(Array.isArray(deserialize)) return [key, hasMany(deserialize[0])];
         return [key, hasOne(deserialize)];
       });
+      modelDeserializers.set(this, deserializers);
     }
-    return this._deserializers;
+    return modelDeserializers.get(this);
   }
 
   // Creates observable properties for the model using the keys defined in the schema
   // so you won't have to add @observable class properties for keys declared in the schema.
   // This value is cached.
   static get initialObservables() {
-    if(!this._initialObservables) {
-      this._initialObservables = this.deserializers.reduce((observables, [ key ]) => {
+    if(!modelObservables.has(this)) {
+      const observables = this.deserializers.reduce((observables, [ key ]) => {
         observables[key] = null;
         return observables;
       }, {});
+      modelObservables.set(this, observables);
     }
-    return this._initialObservables;
+    return modelObservables.get(this);
   }
 
   constructor(fields, store) {

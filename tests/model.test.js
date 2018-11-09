@@ -150,4 +150,33 @@ describe('Model', () => {
     model.key[0] = 'changed';
     expect(values).toEqual(['unchanged', 'changed']);
   });
+
+  test('Should be able to extend custom models with new schema pairs', () => {
+    class Parent extends Model {
+      static get schema() {
+        return {
+          key1: Number,
+        };
+      }
+    }
+
+    class Child extends Parent {
+      static get schema() {
+        return {
+          ...Parent.schema,
+          key2: String,
+        };
+      }
+    }
+
+    const parent = new Parent({ key1: 20 });
+
+    const child = new Child({
+      key1: 10,
+      key2: 'string',
+    });
+
+    expect(child.key1).toEqual(10);
+    expect(child.key2).toEqual('string');
+  });
 });

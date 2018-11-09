@@ -15,6 +15,9 @@ var _mobx = require('mobx');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var modelDeserializers = new Map();
+var modelObservables = new Map();
+
 var Model = function () {
   _createClass(Model, null, [{
     key: 'create',
@@ -43,8 +46,8 @@ var Model = function () {
     key: 'deserializers',
     get: function get() {
       if (!this.schema) return [];
-      if (!this._deserializers) {
-        this._deserializers = Object.entries(this.schema).map(function (_ref) {
+      if (!modelDeserializers.has(this)) {
+        var deserializers = Object.entries(this.schema).map(function (_ref) {
           var _ref2 = _slicedToArray(_ref, 2),
               key = _ref2[0],
               deserialize = _ref2[1];
@@ -53,8 +56,9 @@ var Model = function () {
           if (Array.isArray(deserialize)) return [key, hasMany(deserialize[0])];
           return [key, hasOne(deserialize)];
         });
+        modelDeserializers.set(this, deserializers);
       }
-      return this._deserializers;
+      return modelDeserializers.get(this);
     }
 
     // Creates observable properties for the model using the keys defined in the schema
@@ -64,16 +68,17 @@ var Model = function () {
   }, {
     key: 'initialObservables',
     get: function get() {
-      if (!this._initialObservables) {
-        this._initialObservables = this.deserializers.reduce(function (observables, _ref3) {
+      if (!modelObservables.has(this)) {
+        var observables = this.deserializers.reduce(function (observables, _ref3) {
           var _ref4 = _slicedToArray(_ref3, 1),
               key = _ref4[0];
 
           observables[key] = null;
           return observables;
         }, {});
+        modelObservables.set(this, observables);
       }
-      return this._initialObservables;
+      return modelObservables.get(this);
     }
   }]);
 
